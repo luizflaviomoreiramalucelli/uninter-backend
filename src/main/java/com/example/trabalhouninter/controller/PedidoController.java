@@ -38,8 +38,8 @@ public class PedidoController {
 	}
 
 	@GetMapping
-	public List<?> findAll() {
-		return repository.findAll();
+	public List<PedidoResponse> findAll() {
+		return repository.findAll().stream().map(e -> new PedidoResponse(e)).toList();
 	}
 
 	@GetMapping(path = { "/{id}" })
@@ -50,9 +50,14 @@ public class PedidoController {
 
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody PedidoRequest request) {
+		if (request.getQtd() == null || request.getQtd() < 0) {
+			return ResponseEntity.badRequest().body("A quantidade precisa ser um valor acima de 0");
+		}
+		
 		if (request.getClienteId() == null || request.getProdutoId() == null) {
 			return ResponseEntity.badRequest().body("clienteId e produtoId são obrigatórios");
 		}
+		
 		Cliente cliente = clienteRepository.findById(request.getClienteId()).orElse(null);
 		Produto produto = produtoRepository.findById(request.getProdutoId()).orElse(null);
 
@@ -64,6 +69,7 @@ public class PedidoController {
 		pedido.setCliente(cliente);
 		pedido.setProduto(produto);
 		pedido.setQtd(request.getQtd());
+		pedido.setData(request.getData());
 		Pedido pedidoSalvo = repository.save(pedido);
 		PedidoResponse response = new PedidoResponse(pedidoSalvo);
 		return ResponseEntity.ok().body(response);
@@ -75,7 +81,7 @@ public class PedidoController {
 			return ResponseEntity.badRequest().body("clienteId e produtoId são obrigatórios");
 		}
 
-		if (request.getQtd() > 0) {
+		if (request.getQtd() == null || request.getQtd() < 0) {
 			return ResponseEntity.badRequest().body("A quantidade precisa ser um valor acima de 0");
 		}
 
@@ -91,6 +97,7 @@ public class PedidoController {
 			record.setData(LocalDateTime.now());
 			record.setCliente(cliente);
 			record.setProduto(produto);
+			record.setData(request.getData());
 			Pedido updated = repository.save(record);
 			PedidoResponse response = new PedidoResponse(updated);
 			return ResponseEntity.ok().body(response);
@@ -100,7 +107,7 @@ public class PedidoController {
 	@PatchMapping(value = "/{id}")
 	public ResponseEntity<?> updatePatch(@PathVariable("id") long id, @RequestBody PedidoRequest request) {
 		return repository.findById(id).map(record -> {
-			if (request.getQtd() > 0) {
+			if (request.getQtd() != null && request.getQtd() < 0) {
 				record.setQtd(request.getQtd());
 			}
 
@@ -118,6 +125,10 @@ public class PedidoController {
 					return ResponseEntity.notFound().build();
 				}
 				record.setProduto(produto);
+			}
+
+			if (request.getData() != null) {
+				record.setData(request.getData());
 			}
 			Pedido updated = repository.save(record);
 			PedidoResponse response = new PedidoResponse(updated);
