@@ -50,7 +50,7 @@ public class PedidoController {
 
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody PedidoRequest request) {
-		if (request.getQtd() == null || request.getQtd() < 0) {
+		if (request.getQtd() == null || request.getQtd() <= 0) {
 			return ResponseEntity.badRequest().body("A quantidade precisa ser um valor acima de 0");
 		}
 		
@@ -81,7 +81,7 @@ public class PedidoController {
 			return ResponseEntity.badRequest().body("clienteId e produtoId são obrigatórios");
 		}
 
-		if (request.getQtd() == null || request.getQtd() < 0) {
+		if (request.getQtd() == null || request.getQtd() <= 0) {
 			return ResponseEntity.badRequest().body("A quantidade precisa ser um valor acima de 0");
 		}
 
